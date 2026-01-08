@@ -6,11 +6,13 @@ local defaults = {
   keymap = 'go',
   natural_sort = true,
   ignore_case = false,
+  unique = false,
   whitespace = {
     alignment_threshold = 3,
   },
   mappings = {
     operator = 'go',
+    unique_operator = false,
     textobject = {
       inner = 'is',
       around = 'as',

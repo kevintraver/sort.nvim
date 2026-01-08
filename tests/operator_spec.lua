@@ -808,6 +808,119 @@ describe('operator functionality', function()
     )
   end)
 
+  describe('unique sorting', function()
+    describe('with config option', function()
+      it('should remove duplicates when unique config is enabled', function()
+        local config = require('sort.config')
+        config.setup({ unique = true })
+
+        setup_buffer('cherry,apple,banana,apple,cherry')
+
+        set_operator_marks(1, 1, 1, 32)
+
+        operator.sort_operator('char', false)
+
+        local result = get_buffer_content()
+        assert.are.equal('apple,banana,cherry', result[1])
+
+        -- Reset config.
+        config.setup({ unique = false })
+      end)
+
+      it(
+        'should remove duplicates in line sorting when unique is enabled',
+        function()
+          local config = require('sort.config')
+          config.setup({ unique = true })
+
+          setup_buffer({
+            'zebra',
+            'apple',
+            'banana',
+            'apple',
+            'zebra',
+          })
+
+          set_visual_marks(1, 1, 5, 5)
+
+          operator.sort_operator('line', true)
+
+          local result = get_buffer_content()
+          assert.are.same({ 'apple', 'banana', 'zebra' }, result)
+
+          -- Reset config.
+          config.setup({ unique = false })
+        end
+      )
+
+      it('should not remove duplicates by default', function()
+        setup_buffer('cherry,apple,banana,apple,cherry')
+
+        set_operator_marks(1, 1, 1, 32)
+
+        operator.sort_operator('char', false)
+
+        local result = get_buffer_content()
+        assert.are.equal('apple,apple,banana,cherry,cherry', result[1])
+      end)
+    end)
+
+    describe('with options_override', function()
+      it('should remove duplicates when unique option is passed', function()
+        setup_buffer('cherry,apple,banana,apple,cherry')
+
+        set_operator_marks(1, 1, 1, 32)
+
+        operator.sort_operator('char', false, { unique = true })
+
+        local result = get_buffer_content()
+        assert.are.equal('apple,banana,cherry', result[1])
+      end)
+
+      it('should remove duplicates in line sorting', function()
+        setup_buffer({
+          'zebra',
+          'apple',
+          'banana',
+          'apple',
+          'zebra',
+        })
+
+        set_visual_marks(1, 1, 5, 5)
+
+        operator.sort_operator('line', true, { unique = true })
+
+        local result = get_buffer_content()
+        assert.are.same({ 'apple', 'banana', 'zebra' }, result)
+      end)
+
+      it('should handle unique sorting with visual selection', function()
+        setup_buffer('c,a,b,a,c,b')
+
+        set_visual_marks(1, 1, 1, 11)
+
+        operator.sort_operator('char', true, { unique = true })
+
+        local result = get_buffer_content()
+        assert.are.equal('a,b,c', result[1])
+      end)
+
+      it(
+        'should sort without removing duplicates when unique is false',
+        function()
+          setup_buffer('cherry,apple,banana,apple,cherry')
+
+          set_operator_marks(1, 1, 1, 32)
+
+          operator.sort_operator('char', false, { unique = false })
+
+          local result = get_buffer_content()
+          assert.are.equal('apple,apple,banana,cherry,cherry', result[1])
+        end
+      )
+    end)
+  end)
+
   describe('visual block sorting', function()
     it('should sort text within visual block selection', function()
       setup_buffer({

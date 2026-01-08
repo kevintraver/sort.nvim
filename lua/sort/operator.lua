@@ -227,7 +227,8 @@ end
 --- Main operator function for sorting.
 --- @param motion_type string Motion type from operatorfunc
 --- @param from_visual boolean|nil Whether called from visual mode
-M.sort_operator = function(motion_type, from_visual)
+--- @param options_override table|nil Optional overrides for sort options (e.g., { unique = true })
+M.sort_operator = function(motion_type, from_visual, options_override)
   local start_pos, end_pos, is_visual_marks
 
   if from_visual then
@@ -317,6 +318,12 @@ M.sort_operator = function(motion_type, from_visual)
   local user_config = config.get_user_config()
   options.natural = user_config.natural_sort
   options.ignore_case = user_config.ignore_case
+  options.unique = user_config.unique
+
+  -- Apply any option overrides (e.g., unique = true for unique operator).
+  if options_override then
+    options = vim.tbl_extend('force', options, options_override)
+  end
 
   local sorted_text
   local lines = vim.split(text, '\n')
@@ -363,15 +370,21 @@ end
 
 -- Make the function globally accessible for operatorfunc.
 -- vim's operatorfunc only passes motion_type, so we need a wrapper.
--- Make the function globally accessible for operatorfunc.
--- vim's operatorfunc only passes motion_type, so we need a wrapper.
 local function sort_operator_wrapper(motion_type)
   return M.sort_operator(motion_type, false) -- false = not from visual mode
 end
 
--- Export the wrapper for global access
+-- Unique sort operator wrapper (passes unique = true).
+local function sort_unique_operator_wrapper(motion_type)
+  return M.sort_operator(motion_type, false, { unique = true })
+end
+
+-- Export the wrappers for global access
 M.sort_operator_wrapper = sort_operator_wrapper
+M.sort_unique_operator_wrapper = sort_unique_operator_wrapper
 -- selene: allow(global_usage)
 _G._sort_operator = sort_operator_wrapper
+-- selene: allow(global_usage)
+_G._sort_unique_operator = sort_unique_operator_wrapper
 
 return M

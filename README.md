@@ -49,6 +49,9 @@
   -- Case-insensitive sorting (default: false).
   ignore_case = false,
 
+  -- Remove duplicate items when sorting (opt-in, default: false).
+  unique = false,
+
   -- Whitespace alignment threshold.
   whitespace = {
     alignment_threshold = 3,
@@ -57,6 +60,8 @@
   -- Default keymappings (set to false to disable).
   mappings = {
     operator = 'go',
+    -- Unique operator disabled by default. Set to a string (e.g., 'gO') to enable.
+    unique_operator = false,
     textobject = {
       inner = 'io',
       around = 'ao',
@@ -109,15 +114,15 @@ When selecting within a single line, the plugin performs delimiter-based sorting
 
 **Sort** provides Vim-style operators and text objects for efficient sorting:
 
-| Mapping | Mode                   | Description                         |
-| ------- | ---------------------- | ----------------------------------- |
-| `go`    | Normal                 | Sort operator (use with any motion) |
-| `go`    | Visual                 | Sort visual selection               |
-| `gogo`  | Normal                 | Sort current line                   |
-| `io`    | Operator/Visual        | Inner sortable region text object   |
-| `ao`    | Operator/Visual        | Around sortable region text object  |
-| `]o`    | Normal/Visual/Operator | Jump to next delimiter              |
-| `[o`    | Normal/Visual/Operator | Jump to previous delimiter          |
+| Mapping | Mode                   | Description                                    |
+| ------- | ---------------------- | ---------------------------------------------- |
+| `go`    | Normal                 | Sort operator (use with any motion)            |
+| `go`    | Visual                 | Sort visual selection                          |
+| `gogo`  | Normal                 | Sort current line                              |
+| `io`    | Operator/Visual        | Inner sortable region text object              |
+| `ao`    | Operator/Visual        | Around sortable region text object             |
+| `]o`    | Normal/Visual/Operator | Jump to next delimiter                         |
+| `[o`    | Normal/Visual/Operator | Jump to previous delimiter                     |
 
 All sorting operations support Vim's dot-repeat (`.`) functionality, allowing you to easily repeat the last sort operation.
 
@@ -153,6 +158,30 @@ require('sort').setup({
 
 **Note**: The `:Sort i` command still works independently of this setting for explicit case-insensitive sorting.
 
+### Unique sorting (removing duplicates)
+
+To always remove duplicates when sorting with the `go` operator:
+
+```lua
+require('sort').setup({
+  unique = true,
+})
+```
+
+Alternatively, enable a separate unique sort operator (disabled by default):
+
+```lua
+require('sort').setup({
+  mappings = {
+    unique_operator = 'gO', -- or any key you prefer
+  },
+})
+```
+
+**Note**: `gO` is a built-in Vim command (show outline), so choose a different key if you use that feature.
+
+With this enabled, `gO{motion}` sorts and removes duplicates, while `go{motion}` sorts normally.
+
 ### Customizing mappings
 
 You can customize the default mappings:
@@ -161,6 +190,7 @@ You can customize the default mappings:
 require('sort').setup({
   mappings = {
     operator = 'gs',
+    unique_operator = 'gS', -- opt-in to a unique sort operator
     textobject = {
       inner = 'ii',
       around = 'ai',

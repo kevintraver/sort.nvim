@@ -7,16 +7,25 @@ local M = {}
 
 --- Set up operator mappings.
 --- @param mappings table Mapping configuration
-local function setup_operator_mappings(mappings)
+--- @param options_override table|nil Optional overrides for sort options
+local function setup_operator_mappings(mappings, options_override)
   local operator_key = mappings.operator
+  local operatorfunc_name = '_sort_operator'
+  local desc_prefix = 'Sort'
+
+  -- If options_override is provided, use the unique operator variant.
+  if options_override and options_override.unique then
+    operatorfunc_name = '_sort_unique_operator'
+    desc_prefix = 'Sort unique'
+  end
 
   -- Normal mode operator mapping.
   vim.keymap.set('n', operator_key, function()
-    vim.o.operatorfunc = 'v:lua._sort_operator'
+    vim.o.operatorfunc = 'v:lua.' .. operatorfunc_name
     return 'g@'
   end, {
     expr = true,
-    desc = 'Sort operator',
+    desc = desc_prefix .. ' operator',
     silent = true,
   })
 
@@ -58,20 +67,20 @@ local function setup_operator_mappings(mappings)
     vim.api.nvim_buf_set_mark(0, '<', start_row, start_col - 1, {})
     vim.api.nvim_buf_set_mark(0, '>', end_row, end_col - 1, {})
 
-    -- Call the operator with visual mode flag.
-    operator.sort_operator(detected_mode, true)
+    -- Call the operator with visual mode flag and options override.
+    operator.sort_operator(detected_mode, true, options_override)
   end, {
-    desc = 'Sort selection',
+    desc = desc_prefix .. ' selection',
     silent = true,
   })
 
   -- Line-wise shortcut (operator + operator = line).
   vim.keymap.set('n', operator_key .. operator_key, function()
-    vim.o.operatorfunc = 'v:lua._sort_operator'
+    vim.o.operatorfunc = 'v:lua.' .. operatorfunc_name
     return 'g@_'
   end, {
     expr = true,
-    desc = 'Sort current line',
+    desc = desc_prefix .. ' current line',
     silent = true,
   })
 end
@@ -136,6 +145,14 @@ M.setup = function()
   -- Set up operator mappings.
   if mappings.operator and mappings.operator ~= false then
     setup_operator_mappings(mappings)
+  end
+
+  -- Set up unique operator mappings (opt-in, disabled by default).
+  if mappings.unique_operator and mappings.unique_operator ~= false then
+    setup_operator_mappings(
+      { operator = mappings.unique_operator },
+      { unique = true }
+    )
   end
 
   -- Set up textobject mappings.
